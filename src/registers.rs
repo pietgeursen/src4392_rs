@@ -57,7 +57,7 @@ pub enum Registers {
 impl Registers {
     pub fn as_address_byte(&self, rw: ReadWrite) -> u8 {
         match rw {
-            ReadWrite::Read => *self as u8 | (1u8 << 8),
+            ReadWrite::Read => *self as u8 | (1u8 << 7),
             ReadWrite::Write => *self as u8,
         }
     }
