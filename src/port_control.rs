@@ -1,5 +1,7 @@
 use packed_struct::prelude::*;
 
+use crate::{registers::Registers, RegisterAddress};
+
 #[derive(PrimitiveEnum, Clone, Copy, PartialEq, Debug, Default)]
 pub enum AudioFormat {
     #[default]
@@ -57,6 +59,16 @@ pub struct PortAControl1Register {
     pub _reserved: ReservedZero<packed_bits::Bits<1>>,
 }
 
+impl PortAControl1Register {
+    pub const REGISTER_ADDRESS: Registers = Registers::PortAControl;
+}
+
+impl RegisterAddress for PortAControl1Register {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
+}
+
 #[derive(Debug, Default, PackedStruct)]
 #[packed_struct(bit_numbering = "msb0", endian = "lsb")]
 pub struct PortAControl2Register {
@@ -66,6 +78,15 @@ pub struct PortAControl2Register {
     pub aclk: PortClockSource,
     #[packed_field(bits = "4..7")]
     pub _reserved: ReservedZeroes<packed_bits::Bits<4>>,
+}
+impl PortAControl2Register {
+    pub const REGISTER_ADDRESS: Registers = Registers::PortAControl2;
+}
+
+impl RegisterAddress for PortAControl2Register {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
 }
 
 #[derive(Debug, Default, PackedStruct)]
@@ -88,6 +109,15 @@ pub struct PortBControl1Register {
     #[packed_field(bits = "7")]
     pub _reserved: ReservedZero<packed_bits::Bits<1>>,
 }
+impl PortBControl1Register {
+    pub const REGISTER_ADDRESS: Registers = Registers::PortBControl;
+}
+
+impl RegisterAddress for PortBControl1Register {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
+}
 
 #[derive(Debug, Default, PackedStruct)]
 #[packed_struct(bit_numbering = "msb0", endian = "lsb")]
@@ -98,4 +128,13 @@ pub struct PortBControl2Register {
     pub aclk: PortClockSource,
     #[packed_field(bits = "4..7")]
     pub _reserved: ReservedZeroes<packed_bits::Bits<4>>,
+}
+impl PortBControl2Register {
+    pub const REGISTER_ADDRESS: Registers = Registers::PortBControl2;
+}
+
+impl RegisterAddress for PortBControl2Register {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
 }

@@ -12,5 +12,3 @@ pub struct GlobalInterruptStatus {
     #[packed_field(bits = "0")]
     pub src: bool,
 }
-
-

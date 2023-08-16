@@ -1,5 +1,9 @@
 use packed_struct::prelude::*;
 
+use crate::RegisterAddress;
+
+use crate::registers::Registers;
+
 #[derive(PrimitiveEnum, Clone, Copy, PartialEq, Debug, Default)]
 pub enum SrcSource {
     #[default]
@@ -26,6 +30,14 @@ pub struct SrcControl1 {
     pub mute: bool,
     #[packed_field(bits = "6")]
     pub track: bool,
+}
+impl SrcControl1 {
+    pub const REGISTER_ADDRESS: Registers = Registers::SrcControl;
+}
+impl RegisterAddress for SrcControl1 {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
 }
 
 #[derive(PrimitiveEnum, Clone, Copy, PartialEq, Debug, Default)]
@@ -67,6 +79,14 @@ pub struct SrcControl2 {
     #[packed_field(bits = "6..8")]
     _reserved: ReservedZeroes<packed_bits::Bits<2>>,
 }
+impl SrcControl2 {
+    pub const REGISTER_ADDRESS: Registers = Registers::SrcControl2;
+}
+impl RegisterAddress for SrcControl2 {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
+}
 
 #[derive(PrimitiveEnum, Clone, Copy, PartialEq, Debug, Default)]
 pub enum SrcOutputWordLength {
@@ -85,6 +105,14 @@ pub struct SrcControl3 {
     #[packed_field(bits = "6..8", ty = "enum")]
     pub output_word_length: SrcOutputWordLength,
 }
+impl SrcControl3 {
+    pub const REGISTER_ADDRESS: Registers = Registers::SrcControl3;
+}
+impl RegisterAddress for SrcControl3 {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
+}
 
 #[derive(Debug, Default, PackedStruct)]
 #[packed_struct(bit_numbering = "msb0", endian = "lsb", size_bytes = "2")]
@@ -93,4 +121,12 @@ pub struct SrcRatio {
     integer: Integer<u8, packed_bits::Bits<5>>,
     #[packed_field(bits = "0..11")]
     fraction: Integer<u16, packed_bits::Bits<11>>,
+}
+impl SrcRatio {
+    pub const REGISTER_ADDRESS: Registers = Registers::SrcInputOutputRatio1;
+}
+impl RegisterAddress for SrcRatio {
+    fn register_address() -> crate::registers::Registers {
+        Self::REGISTER_ADDRESS
+    }
 }

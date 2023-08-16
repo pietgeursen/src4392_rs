@@ -1,6 +1,6 @@
 use packed_struct::prelude::*;
 
-use crate::{Register, Registers};
+use crate::{RegisterAddress, Registers};
 
 #[derive(Debug, Default, PackedStruct)]
 #[packed_struct(bit_numbering = "msb0", endian = "lsb")]
@@ -25,8 +25,8 @@ pub struct Reset {
 impl Reset {
     pub const ADDRESS: Registers = Registers::Reset;
 }
-impl Register for Reset {
-    fn addr() -> u8 {
-        Self::ADDRESS as u8
+impl RegisterAddress for Reset {
+    fn register_address() -> Registers {
+        Self::ADDRESS
     }
 }
