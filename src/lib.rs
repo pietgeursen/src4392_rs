@@ -51,7 +51,7 @@ where
     {
         Self {
             chip_select,
-            spi: PhantomData::default(),
+            spi: PhantomData,
         }
     }
     pub fn reset(&mut self, spi: &mut SPI) -> Result<(), E> {
