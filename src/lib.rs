@@ -193,10 +193,19 @@ pub trait RegisterAddress {
     fn register_address() -> Registers;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+//pub trait ReadModifyWriteSpiRegister<SPI>
+//
+//{
+//    fn read_registers<'a>(
+//        &mut self,
+//        spi: &mut SPI,
+//        start_address: Registers,
+//        buffer: &'a mut [u8],
+//    ) -> Result<&'a [u8], E> {
+//        self.register_transfer(spi, start_address, buffer, ReadWrite::Read)
+//    }
+//
+//
+//}
 
-    #[test]
-    fn it_works() {}
-}
+

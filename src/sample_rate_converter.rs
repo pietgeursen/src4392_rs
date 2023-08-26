@@ -20,7 +20,7 @@ pub enum SrcClockSource {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "msb0", endian = "lsb")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct SrcControl1 {
     #[packed_field(bits = "0..2", ty = "enum")]
     pub source: SrcSource,
@@ -59,7 +59,7 @@ pub enum Deemphasis {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "msb0", endian = "lsb")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct SrcControl2 {
     #[packed_field(bits = "0..2", ty = "enum")]
     pub interpolation_group_delay: InterpolationFilterGroupDelay,
@@ -98,7 +98,7 @@ pub enum SrcOutputWordLength {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "msb0", endian = "lsb")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct SrcControl3 {
     #[packed_field(bits = "0..6")]
     _reserved: ReservedZeroes<packed_bits::Bits<6>>,
@@ -115,7 +115,7 @@ impl RegisterAddress for SrcControl3 {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "msb0", endian = "lsb", size_bytes = "2")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "2")]
 pub struct SrcRatio {
     #[packed_field(bits = "11..16")]
     integer: Integer<u8, packed_bits::Bits<5>>,
@@ -128,5 +128,35 @@ impl SrcRatio {
 impl RegisterAddress for SrcRatio {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn src_control3() {
+        let src_control3 = SrcControl3 {
+            output_word_length: SrcOutputWordLength::_20bits,
+            ..Default::default()
+        };
+        let packed = src_control3.pack().unwrap();
+        assert_eq!(packed, [0b01000000]);
+    }
+    #[test]
+    fn src_ratio() {
+        let src_control3 = SrcRatio {
+            integer: Integer::from_primitive(5),
+            fraction: Integer::from_primitive(567),
+        };
+        let packed = src_control3.pack().unwrap();
+        assert_eq!(
+            packed,
+            [
+                (((5u16 << 3) as u8) & 0b11111000u8) | (((567u16 >> 8) as u8) & 0b111u8),
+                (567u16 & 0xFF) as u8
+            ]
+        );
     }
 }
