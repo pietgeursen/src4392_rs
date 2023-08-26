@@ -3,7 +3,7 @@ use packed_struct::prelude::*;
 use crate::{RegisterAddress, Registers};
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes="1")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct Reset {
     #[packed_field(bits = "7")]
     pub n_pdsrc: bool,

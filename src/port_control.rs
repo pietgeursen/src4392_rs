@@ -39,7 +39,7 @@ pub enum PortClockSource {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes="1")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct PortAControl1Register {
     #[packed_field(bits = "0..3", ty = "enum")]
     pub afmt: AudioFormat,
@@ -70,7 +70,7 @@ impl RegisterAddress for PortAControl1Register {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes="1")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct PortAControl2Register {
     #[packed_field(bits = "0..2", ty = "enum")]
     pub adiv: PortMasterClockDivider,
@@ -90,7 +90,7 @@ impl RegisterAddress for PortAControl2Register {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes="1")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct PortBControl1Register {
     #[packed_field(bits = "0..3", ty = "enum")]
     pub afmt: AudioFormat,
@@ -120,7 +120,7 @@ impl RegisterAddress for PortBControl1Register {
 }
 
 #[derive(Debug, Default, PackedStruct)]
-#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes="1")]
+#[packed_struct(bit_numbering = "lsb0", endian = "msb", size_bytes = "1")]
 pub struct PortBControl2Register {
     #[packed_field(bits = "0..2", ty = "enum")]
     pub adiv: PortMasterClockDivider,
