@@ -9,3 +9,4 @@ edition = "2021"
 embedded-hal = "0.2.7"
 nb = "1.1.0"
 packed_struct = {version = "0.10.1", default_features = false }
+fixed = {version = "1.23.1", default_features=false }

@@ -3,6 +3,7 @@ use packed_struct::prelude::*;
 use crate::RegisterAddress;
 
 use crate::registers::Registers;
+pub use fixed::{types::extra::U11, FixedU16};
 
 #[derive(PrimitiveEnum, Clone, Copy, PartialEq, Debug, Default)]
 pub enum SrcSource {
@@ -34,7 +35,7 @@ pub struct SrcControl1 {
 impl SrcControl1 {
     pub const REGISTER_ADDRESS: Registers = Registers::SrcControl;
 }
-impl RegisterAddress for SrcControl1 {
+impl RegisterAddress<Registers> for SrcControl1 {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
     }
@@ -82,7 +83,7 @@ pub struct SrcControl2 {
 impl SrcControl2 {
     pub const REGISTER_ADDRESS: Registers = Registers::SrcControl2;
 }
-impl RegisterAddress for SrcControl2 {
+impl RegisterAddress<Registers> for SrcControl2 {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
     }
@@ -108,7 +109,7 @@ pub struct SrcControl3 {
 impl SrcControl3 {
     pub const REGISTER_ADDRESS: Registers = Registers::SrcControl3;
 }
-impl RegisterAddress for SrcControl3 {
+impl RegisterAddress<Registers> for SrcControl3 {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
     }
@@ -124,8 +125,16 @@ pub struct SrcRatio {
 }
 impl SrcRatio {
     pub const REGISTER_ADDRESS: Registers = Registers::SrcInputOutputRatio1;
+
+    pub fn as_fixed(&self) -> FixedU16<U11> {
+        let bytes = self.pack().unwrap();
+        FixedU16::<U11>::from_be_bytes(bytes)
+    }
+    pub fn as_f32(&self) -> f32 {
+        self.as_fixed().into()
+    }
 }
-impl RegisterAddress for SrcRatio {
+impl RegisterAddress<Registers> for SrcRatio {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
     }
@@ -158,5 +167,15 @@ mod tests {
                 (567u16 & 0xFF) as u8
             ]
         );
+    }
+    #[test]
+    fn src_ratio_to_fixed() {
+        let ratio = SrcRatio {
+            integer: Integer::from_primitive(5),
+            fraction: Integer::from_primitive(567),
+        };
+        let fixed = ratio.as_fixed();
+        assert_eq!(fixed.int(), 5);
+        assert_eq!(fixed.frac(), (567f32 / 2u16.pow(11) as f32));
     }
 }

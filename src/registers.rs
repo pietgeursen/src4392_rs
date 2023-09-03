@@ -1,3 +1,5 @@
+use crate::{AsAddressByte, ReadWrite};
+
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Registers {
     Reset = 0x01,
@@ -54,17 +56,11 @@ pub enum Registers {
     PageSelection = 0x7F,
 }
 
-impl Registers {
-    pub fn as_address_byte(&self, rw: ReadWrite) -> u8 {
+impl AsAddressByte for Registers {
+    fn as_address_byte(&self, rw: ReadWrite) -> u8 {
         match rw {
             ReadWrite::Read => *self as u8 | 0b10000000,
             ReadWrite::Write => *self as u8,
         }
     }
-}
-
-#[derive(Copy, Clone)]
-pub enum ReadWrite {
-    Read,
-    Write,
 }

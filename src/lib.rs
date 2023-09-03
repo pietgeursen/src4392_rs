@@ -1,8 +1,12 @@
 #![no_std]
 use core::{fmt::Debug, marker::PhantomData};
 
-use embedded_hal::blocking::spi::Transfer;
 use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::spi::MODE_3;
+use embedded_hal::{
+    blocking::{delay::DelayMs, spi::Transfer},
+    spi::Mode,
+};
 use packed_struct::prelude::*;
 pub use port_control::{
     AudioFormat, OutputDataSource, PortAControl1Register, PortAControl2Register,
@@ -10,7 +14,7 @@ pub use port_control::{
 };
 use registers::Registers;
 pub use sample_rate_converter::{
-    Deemphasis, InterpolationFilterGroupDelay, SrcClockSource, SrcControl1, SrcControl2, SrcSource,
+    Deemphasis, InterpolationFilterGroupDelay, SrcClockSource, SrcControl1, SrcControl2, SrcSource, SrcRatio,
 };
 
 pub mod interrupt;
@@ -19,7 +23,6 @@ pub mod registers;
 pub mod reset;
 pub mod sample_rate_converter;
 
-pub use registers::ReadWrite;
 use reset::Reset;
 
 #[derive(Copy, Clone, Debug)]
@@ -28,23 +31,31 @@ pub enum Port {
     B,
 }
 
-pub struct Src4392<P, SPI, E>
+pub struct Src4392<P, SPI, E, D, DT>
 where
     P: OutputPin,
     <P as embedded_hal::digital::v2::OutputPin>::Error: Debug,
     SPI: Transfer<u8, Error = E>,
+    D: DelayMs<DT>,
+    DT: From<u8>
 {
     chip_select: P,
     spi: PhantomData<SPI>,
+    delay: D,
+    delay_type: PhantomData<DT>
 }
 
-impl<P, SPI, E> Src4392<P, SPI, E>
+impl<P, SPI, E, D, DT> Src4392<P, SPI, E, D, DT>
 where
     P: OutputPin,
     <P as embedded_hal::digital::v2::OutputPin>::Error: Debug,
     SPI: Transfer<u8, Error = E>,
+    D: DelayMs<DT>,
+    DT: From<u8>
 {
-    pub fn new(chip_select: P) -> Self
+    pub const SPI_MODE: Mode = MODE_3;
+
+    pub fn new(chip_select: P, delay: D) -> Self
     where
         SPI: Transfer<u8, Error = E>,
         E: Debug,
@@ -52,6 +63,8 @@ where
         Self {
             chip_select,
             spi: PhantomData,
+            delay,
+            delay_type: PhantomData
         }
     }
     pub fn reset(&mut self, spi: &mut SPI) -> Result<(), E> {
@@ -68,14 +81,15 @@ where
         output_data_source: OutputDataSource,
         clock_divider: PortMasterClockDivider,
         clock_source: PortClockSource,
-        is_slave: bool,
+        is_master: bool,
     ) -> Result<(), E> {
         match port {
             Port::A => {
                 self.modify_register(spi, |reg: &mut PortAControl1Register| {
-                    reg.am_slave = is_slave;
+                    reg.am_slave = is_master;
                     reg.afmt = audio_format;
                     reg.aout = output_data_source;
+                    reg.amute = false;
                 })?;
 
                 self.modify_register(spi, |reg: &mut PortAControl2Register| {
@@ -85,9 +99,10 @@ where
             }
             Port::B => {
                 self.modify_register(spi, |reg: &mut PortBControl1Register| {
-                    reg.am_slave = is_slave;
+                    reg.am_slave = is_master;
                     reg.afmt = audio_format;
                     reg.aout = output_data_source;
+                    reg.amute = false;
                 })?;
 
                 self.modify_register(spi, |reg: &mut PortBControl2Register| {
@@ -110,6 +125,8 @@ where
         self.modify_register(spi, |reg: &mut SrcControl1| {
             reg.source = src_source;
             reg.clock_source = clock_source;
+            reg.mute = false;
+            reg.track = true;
         })?;
 
         self.modify_register(spi, |reg: &mut SrcControl2| {
@@ -134,48 +151,90 @@ where
             }),
         }
     }
+}
 
-    pub fn read_registers<'a>(
+impl<P, SPI, E, D, DT> ReadModifyWriteSpiRegister<SPI, E, Registers> for Src4392<P, SPI, E, D, DT>
+where
+    P: OutputPin,
+    <P as embedded_hal::digital::v2::OutputPin>::Error: Debug,
+    SPI: Transfer<u8, Error = E>,
+    D: DelayMs<DT>,
+    DT: From<u8>
+{
+    fn assert_cs(&mut self) {
+        self.chip_select.set_low().unwrap();
+    }
+
+    fn deassert_cs(&mut self) {
+        self.chip_select.set_high().unwrap();
+        self.delay.delay_ms(1.into());
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum ReadWrite {
+    Read,
+    Write,
+}
+
+/// Each packed struct should implement this trait and return the specific Registers variant that
+/// it corresponds to.
+pub trait RegisterAddress<R> {
+    fn register_address() -> R;
+}
+
+/// Implement this trait on your Registers enum. Often you will set a bit in part of the address to
+/// denote a read or write.
+pub trait AsAddressByte {
+    fn as_address_byte(&self, rw: ReadWrite) -> u8;
+}
+
+pub trait ReadModifyWriteSpiRegister<SPI, SPIERROR, REGISTERS>
+where
+    SPI: Transfer<u8, Error = SPIERROR>,
+    REGISTERS: AsAddressByte,
+{
+    fn read_registers<'a>(
         &mut self,
         spi: &mut SPI,
-        start_address: Registers,
+        start_address: REGISTERS,
         buffer: &'a mut [u8],
-    ) -> Result<&'a [u8], E> {
+    ) -> Result<&'a [u8], SPIERROR> {
         self.register_transfer(spi, start_address, buffer, ReadWrite::Read)
     }
 
-    pub fn write_registers<'a>(
+    fn write_registers<'a>(
         &mut self,
         spi: &mut SPI,
-        start_address: Registers,
+        start_address: REGISTERS,
         buffer: &'a mut [u8],
-    ) -> Result<&'a [u8], E> {
+    ) -> Result<&'a [u8], SPIERROR> {
         self.register_transfer(spi, start_address, buffer, ReadWrite::Write)
     }
 
-    pub fn register_transfer<'a>(
+    fn register_transfer<'a>(
         &mut self,
         spi: &mut SPI,
-        start_address: Registers,
+        start_address: REGISTERS,
         buffer: &'a mut [u8],
         read_or_write: ReadWrite,
-    ) -> Result<&'a [u8], E> {
-        self.chip_select.set_low().unwrap();
+    ) -> Result<&'a [u8], SPIERROR> {
+        self.assert_cs();
         let mut cmd_bytes = [start_address.as_address_byte(read_or_write), 0u8];
         spi.transfer(&mut cmd_bytes)?;
         let result = spi.transfer(buffer);
-        self.chip_select.set_high().unwrap();
+        self.deassert_cs();
         result
     }
 
-    pub fn modify_register<F, R, const RSIZE: usize>(
+    fn modify_register<F, R, const RSIZE: usize>(
         &mut self,
         spi: &mut SPI,
         mut f: F,
-    ) -> Result<(), E>
+    ) -> Result<(), SPIERROR>
     where
         F: FnMut(&mut R),
-        R: PackedStruct<ByteArray = [u8; RSIZE]> + RegisterAddress,
+        R: PackedStruct<ByteArray = [u8; RSIZE]> + RegisterAddress<REGISTERS>,
     {
         let mut buffer = [0u8; RSIZE];
         self.read_registers(spi, R::register_address(), &mut buffer)?;
@@ -187,23 +246,7 @@ where
 
         Ok(())
     }
-}
 
-pub trait RegisterAddress {
-    fn register_address() -> Registers;
+    fn assert_cs(&mut self);
+    fn deassert_cs(&mut self);
 }
-
-//pub trait ReadModifyWriteSpiRegister<SPI>
-//
-//{
-//    fn read_registers<'a>(
-//        &mut self,
-//        spi: &mut SPI,
-//        start_address: Registers,
-//        buffer: &'a mut [u8],
-//    ) -> Result<&'a [u8], E> {
-//        self.register_transfer(spi, start_address, buffer, ReadWrite::Read)
-//    }
-//
-//
-//}

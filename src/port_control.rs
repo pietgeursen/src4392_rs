@@ -6,7 +6,7 @@ use crate::{registers::Registers, RegisterAddress};
 pub enum AudioFormat {
     #[default]
     LeftJustified24bit = 0b000,
-    LeftJustifiedI2S = 0b001,
+    I2S = 0b001,
     RightJustified16bit = 0b100,
     RightJustified18bit = 0b101,
     RightJustified20bit = 0b110,
@@ -63,7 +63,7 @@ impl PortAControl1Register {
     pub const REGISTER_ADDRESS: Registers = Registers::PortAControl;
 }
 
-impl RegisterAddress for PortAControl1Register {
+impl RegisterAddress<Registers> for PortAControl1Register {
     fn register_address() -> crate::registers::Registers {
         Self::REGISTER_ADDRESS
     }
@@ -83,8 +83,8 @@ impl PortAControl2Register {
     pub const REGISTER_ADDRESS: Registers = Registers::PortAControl2;
 }
 
-impl RegisterAddress for PortAControl2Register {
-    fn register_address() -> crate::registers::Registers {
+impl RegisterAddress<Registers> for PortAControl2Register {
+    fn register_address() -> Registers {
         Self::REGISTER_ADDRESS
     }
 }
@@ -113,8 +113,8 @@ impl PortBControl1Register {
     pub const REGISTER_ADDRESS: Registers = Registers::PortBControl;
 }
 
-impl RegisterAddress for PortBControl1Register {
-    fn register_address() -> crate::registers::Registers {
+impl RegisterAddress<Registers> for PortBControl1Register {
+    fn register_address() -> Registers {
         Self::REGISTER_ADDRESS
     }
 }
@@ -133,8 +133,8 @@ impl PortBControl2Register {
     pub const REGISTER_ADDRESS: Registers = Registers::PortBControl2;
 }
 
-impl RegisterAddress for PortBControl2Register {
-    fn register_address() -> crate::registers::Registers {
+impl RegisterAddress<Registers> for PortBControl2Register {
+    fn register_address() -> Registers {
         Self::REGISTER_ADDRESS
     }
 }
